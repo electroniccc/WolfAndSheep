@@ -8,16 +8,22 @@
  * @version: 0.1
 */
 
+const SCAL_BIT = 1 << 4;
+const SCAL_RATIO = 1.155;
+const PIECE_R_CELL_RATIO = 3/10;
+
 class WolfSheepGame {
-	constructor(canvas) {
+	constructor(canvas, onOver=null) {
 		this.canvas = canvas;
+		this.onOver = onOver;
+
 		this.ctx = canvas.getContext('2d');
 
 		const cnvW = Number(window.getComputedStyle(this.canvas).width.replace('px', ''));
 		const cnvH = Number(window.getComputedStyle(this.canvas).height.replace('px', ''));
 		const width = Math.min(cnvW, cnvH);
-		const cellWidth = width * 5 / 28;
-		const pieceRadius = cellWidth * 3 / 10;
+		const cellWidth = width / (5 + PIECE_R_CELL_RATIO * 2 * SCAL_RATIO);
+		const pieceRadius = cellWidth * PIECE_R_CELL_RATIO;
 
 		this.width = width;
 		this.cellWidth = cellWidth;
@@ -34,25 +40,56 @@ class WolfSheepGame {
 		this.locations = locations;
 
 		this.colors = {
-			'black': ['#999999', '#000000'],
-			'white': ['#ffffff', '#cccccc']
+			1: ['#ffffff', '#cccccc'],
+			2: ['#999999', '#000000']
 		};
 
 		this.locToMove = null;
+
+		this.running = false;
+		this.stepCount = 0;
+	}
+
+	get getLoc() {
+		const loc = [];
+		for(let i = 0; i < 6; i++) {
+			const col = [];
+			loc.push(col);
+			for(let j = 0 ; j < 6; j++) {
+				col.push(this.locations[i][j]);
+			}
+		}
+		return loc;
 	}
 
 	init() {
-		this.drawCheckerboard();
-		this.preparePieces();
+		this.prepareLoc();
+		this.draw();
 		this.addEvent();
 	}
 
-	start() {}
+	start() {
+		this.running = true;
+	}
+
+	reset() {
+		this.prepareLoc();
+		this.draw();
+		this.running = false;
+		this.stepCount = 0;
+	}
+
+	draw() {
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+		this.drawCheckerboard();
+		this.drawPieces();
+	}
 
 	drawCheckerboard() {
 		const ctx = this.ctx;
 		const cellWidth = this.cellWidth;
-		const pieceRadius = this.pieceRadius;
+		const pieceRadius = this.pieceRadius * SCAL_RATIO;
 
 		ctx.fillStyle = '#ffffff';
 		ctx.lineCap = 'square';
@@ -63,8 +100,7 @@ class WolfSheepGame {
 			ctx.lineTo(cellWidth * 5 + pieceRadius, cellWidth * i + pieceRadius);
 			ctx.stroke();
 			ctx.closePath();
-		}
-		for(let i = 0; i < 6; i++) {
+
 			ctx.beginPath();
 			ctx.moveTo(cellWidth * i + pieceRadius, pieceRadius);
 			ctx.lineTo(cellWidth * i + pieceRadius, cellWidth * 5 + pieceRadius);
@@ -73,23 +109,23 @@ class WolfSheepGame {
 		}
 	}
 
-	preparePieces() {
+	drawPieces() {
 		for(let i = 0; i < 6; i++) {
-			for(let j = 0; j < 3; j++) {
-				this.locations[i][j] = 1;
-				this.drawPiece(i, j, 'white');
+			for(let j = 0; j < 6; j++) {
+				if(!this.locations[i][j]) continue;
+
+				if(this.locations[i][j] % 2) {
+					this.drawPiece(i, j, SHEEP, this.locations[i][j]&SCAL_BIT ? this.pieceRadius * SCAL_RATIO : 0);
+				} else {
+					this.drawPiece(i, j, WOLF, this.locations[i][j]&SCAL_BIT ? this.pieceRadius * SCAL_RATIO : 0);
+				}
 			}
 		}
-
-		this.locations[1][4] = 2;
-		this.drawPiece(1, 4, 'black');
-		this.locations[4][4] = 2;
-		this.drawPiece(4, 4, 'black');
 	}
 
 	drawPiece(x, y, color, radius=0) {
-		x = x * this.cellWidth + this.pieceRadius;
-		y = y * this.cellWidth + this.pieceRadius;
+		x = x * this.cellWidth + this.pieceRadius * SCAL_RATIO;
+		y = y * this.cellWidth + this.pieceRadius * SCAL_RATIO;
 
 		const ctx = this.ctx;
 		if(radius === 0) {
@@ -109,34 +145,19 @@ class WolfSheepGame {
 		ctx.closePath();
 	}
 
-	erasePiece(x, y, radius=0) {
-		if(radius === 0) {
-			radius = this.pieceRadius;
-		}
-
-		const ctx = this.ctx;
-		const locations = this.locations;
-		
-		ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-		this.drawCheckerboard();
-		
+	prepareLoc() {
 		for(let i = 0; i < 6; i++) {
-			for(let j= 0; j < 6; j++) {
-				if(locations[i][j] == 0 || x==i && y == j) { continue; }
-				this.drawPiece(i, j, locations[i][j]%2?'white':'black', this.pieceRadius);
-			}
+			for(let j = 0; j < 6; j++) {
+				if(j < 3) {
+					this.locations[i][j] = SHEEP;
+				} else {
+					this.locations[i][j] = 0;
+				}
+			} 
 		}
-	}
 
-	markPieceForMovement(x, y, move) {
-		const color = this.locations[x][y] % 2 ? 'white' : 'black';
-		this.erasePiece(x, y, this.pieceRadius * (move ? 1 : 1.155));
-		this.drawPiece(x, y, color, this.pieceRadius * (move ? 1.155 : 1));
-	}
-
-	movePiece(fromX, fromY, toX, toY) {
-		this.erasePiece(fromX, fromY, this.pieceRadius * 1.155);
+		this.locations[1][4] = WOLF;
+		this.locations[4][4] = WOLF;
 	}
 
 	addEvent() {
@@ -146,33 +167,38 @@ class WolfSheepGame {
 	}
 
 	onCanvasClicked(event) {
+		if(!this.running) return;
+
 		const cellWidth = this.cellWidth;
-		const radius = this.pieceRadius;
+		const radius = this.pieceRadius * SCAL_RATIO;
 	
 		const [x, y] = [Math.round((event.clientX-radius)/cellWidth), Math.round((event.clientY-radius)/cellWidth)];
 		
 		if(this.locToMove && this.movementAllowed(this.locToMove[0], this.locToMove[1], x, y)) {
 			const [a, b] = this.locToMove;
-			this.markLoc(a, b, false);
 			this.moveLoc(a, b, x, y);
-			this.movePiece(a, b, x, y);
+			this.draw();
 			return;
 		}
-
+		
 		if(this.locToMove) {
 			const [a, b] = this.locToMove;
 			this.markLoc(a, b, false);
-			this.markPieceForMovement(a, b, false);
+			this.draw();
 		}
 		
 		if(this.locations[x][y]) {
 			this.markLoc(x, y, true);
-			this.markPieceForMovement(x, y, true);
+			this.draw();
 		}
 	}
 
 	markLoc(x, y, mark) {
-		this.locations[x][y] += mark ? 100 : -100;
+		if(mark) {
+			this.locations[x][y] |= SCAL_BIT;
+		} else {
+			this.locations[x][y] &= (~SCAL_BIT);
+		}
 		this.locToMove = mark ? [x, y] : null;
 	}
 
@@ -180,16 +206,69 @@ class WolfSheepGame {
 		const locations = this.locations;
 		locations[toX][toY] = locations[fromX][fromY];
 		locations[fromX][fromY] = 0;
-		locations[toX][toY] -= 100;
+		locations[toX][toY] &= (~SCAL_BIT);
+		this.locToMove = null;
+		this.stepCount += 1;
+
+		if(this.isGameOver()) {
+			this.running = false;
+			if(this.onOver) {
+				this.onOver(this.winner, this.stepCount);
+			}
+		}
+	}
+
+	isGameOver() {
+		const locations = this.locations;
+		let hasSheep = false;
+
+		const wolfLoc = [];
+
+		for(let i = 0; i < 6; i++) {
+			for(let j = 0; j < 6; j++) {
+				if(!locations[i][j]) continue;
+				if(locations[i][j] % 2 == 1) hasSheep = true;
+				if(locations[i][j] % 2 == 0) wolfLoc.push([i, j]);
+			}
+		}
+
+		if(!hasSheep) {
+			console.log('wolf win');
+			this.winner = WOLF;
+			return true;
+		}
+
+		let wolfCanMove = false;
+		for(let i = 0; i < 2; i++) {
+			const [x, y] = wolfLoc[i];
+
+			const arr = [[x, y-1], [x, y+1], [x+1, y], [x-1, y]];
+			for(let a of arr) {
+				if(a[0] >= 0 && a[0] < 6 && a[1] >= 0 && a[1] < 6) {
+					if(!locations[a[0]][a[1]]) wolfCanMove = true;
+				}
+			}
+		}
+		if(!wolfCanMove) {
+			console.log('sheep win');
+			this.winner = SHEEP;
+			return true;
+		}
+
+		return false;
 	}
 
 	movementAllowed(fromX, fromY, toX, toY) {
 		const locations = this.locations;
+
+		if(locations[fromX][fromY] % 2 == 0 && this.stepCount % 2 == 0) {
+			console.log('it is not your turn');
+			return false;
+		}
 		
 		// wolf selected
 		if(locations[fromX][fromY]%2==0) {
 			// target is sheep and distance is less than 2
-			
 			if(locations[toX][toY]%2 && this.locDistance(fromX, fromY, toX, toY) == 2) {
 				return true;
 			}
@@ -213,6 +292,32 @@ function main() {
 	}
 	const game = new WolfSheepGame(canvas);
 	game.init();
+
+	addEvent(game);
+}
+
+function onGameStart(game) {
+	game.start();
+	const btnEl = document.getElementById('btn-start');
+	// removeClass(btnEl, 'button-63');
+	addClass(btnEl, 'clicked');
+}
+
+function onGameReset(game) {
+	game.reset();
+
+	const btnEl = document.getElementById('btn-start');
+	removeClass(btnEl, 'clicked');
+}
+
+function addEvent(game) {
+	document.getElementById('btn-start').addEventListener('click', (event) => {
+		onGameStart(game, event);
+	});
+
+	document.getElementById('btn-reset').addEventListener('click', (event) => {
+		onGameReset(game, event);
+	})
 }
 
 main();
