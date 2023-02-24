@@ -13,9 +13,10 @@ const SCAL_RATIO = 1.155;
 const PIECE_R_CELL_RATIO = 3/10;
 
 class WolfSheepGame {
-	constructor(canvas, onOver=null) {
+	constructor(canvas, onOver=null, onUserMoved=null) {
 		this.canvas = canvas;
 		this.onOver = onOver;
+		this.onUserMoved = onUserMoved || this.defaultOnUserMoved;
 
 		this.ctx = canvas.getContext('2d');
 
@@ -48,9 +49,14 @@ class WolfSheepGame {
 
 		this.running = false;
 		this.stepCount = 0;
+
+		this.prepareLoc();
+		this.wolfBot = new GameBotWolf(this);
+
+		this.userRole = SHEEP;
 	}
 
-	get getLoc() {
+	getLoc() {
 		const loc = [];
 		for(let i = 0; i < 6; i++) {
 			const col = [];
@@ -63,7 +69,6 @@ class WolfSheepGame {
 	}
 
 	init() {
-		this.prepareLoc();
 		this.draw();
 		this.addEvent();
 	}
@@ -77,6 +82,8 @@ class WolfSheepGame {
 		this.draw();
 		this.running = false;
 		this.stepCount = 0;
+
+		this.wolfBot = new GameBotWolf(this);
 	}
 
 	draw() {
@@ -173,11 +180,17 @@ class WolfSheepGame {
 		const radius = this.pieceRadius * SCAL_RATIO;
 	
 		const [x, y] = [Math.round((event.clientX-radius)/cellWidth), Math.round((event.clientY-radius)/cellWidth)];
+
+		if(this.locations[x][y] && this.locations[x][y] != this.userRole) return;
 		
 		if(this.locToMove && this.movementAllowed(this.locToMove[0], this.locToMove[1], x, y)) {
 			const [a, b] = this.locToMove;
 			this.moveLoc(a, b, x, y);
 			this.draw();
+
+			if(!this.running) return;
+
+			this.onUserMoved(a, b, x, y);
 			return;
 		}
 		
@@ -261,7 +274,7 @@ class WolfSheepGame {
 	movementAllowed(fromX, fromY, toX, toY) {
 		const locations = this.locations;
 
-		if(locations[fromX][fromY] % 2 == 0 && this.stepCount % 2 == 0) {
+		if((this.stepCount+1) % 2 != locations[fromX][fromY] %2) {
 			console.log('it is not your turn');
 			return false;
 		}
@@ -282,21 +295,36 @@ class WolfSheepGame {
 	locDistance(fromX, fromY, toX, toY) {
 		return Math.sqrt(Math.pow(toX-fromX, 2) + Math.pow(toY-fromY, 2));
 	}
-}
 
+	playerMove(fromX, fromY, toX, toY) {
+		if(!this.running) return;
 
-function main() {
-	const canvas = document.getElementById('canvas');
-	if(!canvas.getContext) {
-		return;
+		if(!this.movementAllowed(fromX, fromY, toX, toY)) {
+			return false;
+		}
+
+		this.moveLoc(fromX, fromY, toX, toY);
+		this.draw();
+
+		return true;
 	}
-	const game = new WolfSheepGame(canvas);
-	game.init();
 
-	addEvent(game);
+	validLoc([x, y]) {
+		return x >= 0 && x < CELL_COUNT && y >= 0 && y < CELL_COUNT;
+	}
+
+	defaultOnUserMoved(fromX, fromY, toX, toY) {
+		[fromX, fromY, toX, toY] = this.wolfBot.next(fromX, fromY, toX, toY);
+
+		this.playerMove(fromX, fromY, toX, toY);
+	}
 }
 
+let canStart = true;
 function onGameStart(game) {
+	if(game.running) return;
+	if(!canStart) return;
+	canStart = false;
 	game.start();
 	const btnEl = document.getElementById('btn-start');
 	// removeClass(btnEl, 'button-63');
@@ -305,9 +333,16 @@ function onGameStart(game) {
 
 function onGameReset(game) {
 	game.reset();
+	canStart = true;
 
 	const btnEl = document.getElementById('btn-start');
 	removeClass(btnEl, 'clicked');
+}
+
+function onGameOver(winner, steps) {
+	const btnEl = document.getElementById('btn-start');
+	removeClass(btnEl, 'clicked');
+	alert(`${winner==SHEEP?'Sheep': 'wolf'} win`);
 }
 
 function addEvent(game) {
@@ -318,6 +353,18 @@ function addEvent(game) {
 	document.getElementById('btn-reset').addEventListener('click', (event) => {
 		onGameReset(game, event);
 	})
+}
+
+
+function main() {
+	const canvas = document.getElementById('canvas');
+	if(!canvas.getContext) {
+		return;
+	}
+	const game = new WolfSheepGame(canvas, onGameOver);
+	game.init();
+
+	addEvent(game);
 }
 
 main();

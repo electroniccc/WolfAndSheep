@@ -3,6 +3,8 @@ const [
 	WOLF
 ] = [1, 2];
 
+const CELL_COUNT = 6;
+
 function addClass(element, className) {
 	if (!element || !className) {
 		return;
