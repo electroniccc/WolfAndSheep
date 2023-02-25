@@ -23,9 +23,12 @@ class GameBotWolf {
 	}
 
 	next(fromX, fromY, toX, toY) {
+		return this._nextLv1(fromX, fromY, toX, toY);
+	}
+
+	_nextLv1(fromX, fromY, toX, toY) {
 		const locations = this.locations;
-		locations[toX][toY] = locations[fromX][fromY];
-		locations[fromX][fromY] = 0;
+		this.moveLoc(fromX, fromY, toX, toY);
 
 		let choosedWolf = [0, 0];
 		let x = 0, y = 0;
@@ -44,13 +47,12 @@ class GameBotWolf {
 		}
 
 		const ret = [choosedWolf[0], choosedWolf[1], x, y];
-		
-		this.locations[choosedWolf[0]][choosedWolf[1]] = 0;
-		this.locations[x][y] = WOLF;
+
+		this.moveLoc(choosedWolf[0], choosedWolf[1], x, y);
+
 		choosedWolf[0] = x;
 		choosedWolf[1] = y;
 
-		console.log(ret);
 		return ret;
 	}
 
@@ -67,12 +69,14 @@ class GameBotWolf {
 				if(!this.locAvailable(loc)) continue;
 				// suppose that this wolf move to this location
 				// find out how many sheeps to eat
+				this.moveLoc(wolf[0], wolf[1], loc[0], loc[1]);
 				wolf[0] = loc[0];
 				wolf[1] = loc[1];
 				let sheeps = [];
 				for(let tmpWolf of this.wolfLoc) {
 					sheeps = sheeps.concat(this.hasSheepToEat(tmpWolf));
 				}
+				this.moveLoc(wolf[0], wolf[1], x, y);
 				wolf[0] = x;
 				wolf[1] = y;
 
@@ -120,5 +124,11 @@ class GameBotWolf {
 
 	locAvailable([x, y]) {
 		return x >= 0 && x < CELL_COUNT && y >= 0 && y < CELL_COUNT && !this.locations[x][y];
+	}
+
+	moveLoc(fromX, fromY, toX, toY) {
+		const locations = this.locations;
+		locations[toX][toY] = locations[fromX][fromY];
+		locations[fromX][fromY] = 0;
 	}
 }

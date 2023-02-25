@@ -179,7 +179,7 @@ class WolfSheepGame {
 		const cellWidth = this.cellWidth;
 		const radius = this.pieceRadius * SCAL_RATIO;
 	
-		const [x, y] = [Math.round((event.clientX-radius)/cellWidth), Math.round((event.clientY-radius)/cellWidth)];
+		const [x, y] = [Math.round((event.offsetX-radius)/cellWidth), Math.round((event.offsetY-radius)/cellWidth)];
 
 		if(this.locations[x][y] && this.locations[x][y] != this.userRole) return;
 		
@@ -365,6 +365,8 @@ function main() {
 	game.init();
 
 	addEvent(game);
+
+	document.getElementById('canvas').classList.add('user-isSheep');
 }
 
 main();

@@ -1,6 +1,7 @@
 .control {
 	display: flex;
 	justify-content: space-evenly;
+  margin: 20px 0;
 }
 
 .button-63 {
@@ -92,4 +93,8 @@ button.button-64 {
     font-size: 24px;
     min-width: 196px;
   }
+}
+
+canvas.user-isSheep {
+  transform: rotateZ(180deg);
 }
