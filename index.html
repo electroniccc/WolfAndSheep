@@ -1,24 +1,55 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0, user-scalable=0">
-		<link rel="stylesheet" href="style.css?111">
-	</head>
-	<body>
-		<div id="overview">
-			<div>
-				<div style="display: flex; justify-content: center; align-items: center;">
-					<div><canvas id="canvas" width="500px" height="500px"></canvas></div>
-				</div>
-			</div>
-			<div id="control" class="control">
-				<div><button class="button-63" role="button" id="btn-start"><span class="text">Start</span></button></div>
-				<div><button class="button-63" role="button" id="btn-reset"><span class="text">Reset</span></button></div>
+
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0, user-scalable=0">
+	<link rel="stylesheet" href="style.css?111">
+</head>
+
+<body>
+	<div id="overview">
+		<div>
+			<div style="display: flex; justify-content: center; align-items: center;">
+				<div><canvas id="canvas" width="500px" height="500px"></canvas></div>
 			</div>
 		</div>
-	</body>
-	<script type="text/javascript" src="common.js"></script>
-	<script type="text/javascript" src="bot.js"></script>
-	<script type="text/javascript" src="game.js"></script>
-	<script type="text/javascript" src="main.js"></script>
+		<div id="control" class="control">
+			<div><button class="button-63" role="button" id="btn-start"><span class="text">Start</span></button></div>
+			<div><button class="button-63" role="button" id="btn-reset"><span class="text">Reset</span></button></div>
+		</div>
+	</div>
+	<!-- 对话框容器 -->
+	<div class="dialog-container" id="choose-dialog">
+		<!-- 对话框 -->
+		<div id="dialog" class="dialog">
+			<!-- 对话框标题 -->
+			<h2 class="dialog-header">Which role would you like to play?</h2>
+			<!-- 对话框内容 -->
+			<!-- <div class="dialog-body">
+				<p>对话框内容</p>
+			</div> -->
+			<!-- 对话框按钮 -->
+			<button id="sheep-btn" class="dialog-button">Sheep</button>
+			<button id="wolf-btn" class="dialog-button">Wolf</button>
+		</div>
+	</div>
+	<div class="dialog-container" id="dialog-result">
+		<!-- 对话框 -->
+		<div class="dialog">
+			<!-- 对话框标题 -->
+			<h2 id="result-header" class="dialog-header"></h2>
+			<!-- 对话框内容 -->
+			<!-- <div class="dialog-body">
+				<p>对话框内容</p>
+			</div> -->
+			<!-- 对话框按钮 -->
+			<button id="ok-btn" class="dialog-button">Ok</button>
+		</div>
+	</div>
+</body>
+<script type="text/javascript" src="common.js"></script>
+<script type="text/javascript" src="bot.js"></script>
+<script type="text/javascript" src="game.js"></script>
+<script type="text/javascript" src="main.js"></script>
+
 </html>

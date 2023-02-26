@@ -12,11 +12,8 @@ let canStart = true;
 function onGameStart(game) {
 	if(game.running) return;
 	if(!canStart) return;
-	canStart = false;
-	game.start();
-	const btnEl = document.getElementById('btn-start');
-	// removeClass(btnEl, 'button-63');
-	addClass(btnEl, 'clicked');
+
+	document.getElementById("choose-dialog").style.display = "block";
 }
 
 function onGameReset(game) {
@@ -30,7 +27,28 @@ function onGameReset(game) {
 function onGameOver(winner, steps) {
 	const btnEl = document.getElementById('btn-start');
 	removeClass(btnEl, 'clicked');
-	alert(`${winner==SHEEP?'Sheep': 'wolf'} win`);
+	
+	document.getElementById('dialog-result').style.display = "block";
+	document.getElementById('result-header').innerHTML = `${winner==SHEEP?'Sheep': 'Wolf'} Win!`
+}
+
+function onDlgClicked(evt, game) {
+	if(evt.target.id == 'sheep-btn') {
+		game.setUserRole(SHEEP);
+		document.getElementById('canvas').classList.add('user-isSheep');
+	} else if(evt.target.id == 'wolf-btn') {
+		game.setUserRole(WOLF);
+	} else {
+		return;
+	}
+
+	canStart = false;
+	game.start();
+	const btnEl = document.getElementById('btn-start');
+	// removeClass(btnEl, 'button-63');
+	addClass(btnEl, 'clicked');
+
+	document.getElementById("choose-dialog").style.display = "none";
 }
 
 function addEvent(game) {
@@ -40,7 +58,12 @@ function addEvent(game) {
 
 	document.getElementById('btn-reset').addEventListener('click', (event) => {
 		onGameReset(game, event);
-	})
+	});
+
+	const dlg = document.getElementById('dialog');
+	dlg.addEventListener('click', (evt) => {
+		onDlgClicked(evt, game);
+	});
 }
 
 function adjustCanvasSize(el) {
@@ -57,7 +80,6 @@ function adjustCanvasSize(el) {
 	el.height = canvasWidth;
 }
 
-
 function main() {
 	const canvas = document.getElementById('canvas');
 	if(!canvas.getContext) {
@@ -70,8 +92,6 @@ function main() {
 	game.init();
 
 	addEvent(game);
-
-	// document.getElementById('canvas').classList.add('user-isSheep');
 }
 
 main();
