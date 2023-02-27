@@ -43,14 +43,14 @@ class WolfSheepGame {
 		this.prepareLoc();
 		this.bot = null;
 
-		// this.userRole = SHEEP;
 		this.userRole = WOLF;
 	}
 
 	setUserRole(role) {
 		this.userRole = role;
-		if(this.userRole = SHEEP) {
+		if(this.userRole == SHEEP) {
 			this.bot = new GameBotWolf(this);
+			this.draw();
 		} else {
 			this.bot = new GameSheepBot(this);
 		}
@@ -77,7 +77,7 @@ class WolfSheepGame {
 		this.running = true;
 
 		if(this.userRole == WOLF) {
-			const [fromX, fromY, toX, toY] = this.sheepBot.next(-1, 0, 0, 0);
+			const [fromX, fromY, toX, toY] = this.bot.next(-1, 0, 0, 0);
 
 			this.playerMove(fromX, fromY, toX, toY);
 		}
@@ -89,7 +89,7 @@ class WolfSheepGame {
 		this.running = false;
 		this.stepCount = 0;
 
-		if(this.userRole = SHEEP) {
+		if(this.userRole == SHEEP) {
 			this.bot = new GameBotWolf(this);
 		} else {
 			this.bot = new GameSheepBot(this);
@@ -140,26 +140,44 @@ class WolfSheepGame {
 		}
 	}
 
-	drawPiece(x, y, color, radius=0) {
+	drawPiece(x, y, role, radius=0) {
+		const cnvW = this.width;
+		const ctx = this.ctx;
+
 		x = x * this.cellWidth + this.pieceRadius * SCAL_RATIO;
 		y = y * this.cellWidth + this.pieceRadius * SCAL_RATIO;
 
-		const ctx = this.ctx;
+		if(this.userRole == SHEEP) {
+			x = cnvW -x;
+			y = cnvW - y;
+			ctx.rotate(Math.PI);
+			ctx.translate(0-cnvW, 0-cnvW);
+		}
+
 		if(radius === 0) {
 			radius = this.pieceRadius;
 		}
 
-		const colors = this.colors;
+		// const colors = this.colors;
 
-		const radgrad = ctx.createRadialGradient(x+radius/2, y+radius/2, 0, x, y, radius);
-		radgrad.addColorStop(0, colors[color][0]);
-		radgrad.addColorStop(1, colors[color][1]);
+		// const radgrad = ctx.createRadialGradient(cnvW - (x+radius/2), cnvW-(y+radius/2), 0, cnvW-x, cnvW-y, radius);
+		// radgrad.addColorStop(0, colors[color][0]);
+		// radgrad.addColorStop(1, colors[color][1]);
 	
-		ctx.beginPath();
-		ctx.arc(x, y, radius, 0, Math.PI * 2, true);
-		ctx.fillStyle = radgrad;
-		ctx.fill();
-		ctx.closePath();
+		// ctx.beginPath();
+		// ctx.arc(cnvW-x, cnvW-y, radius, 0, Math.PI * 2, true);
+		// ctx.fillStyle = radgrad;
+		// ctx.fill();
+		// ctx.closePath();
+		ctx.font = `${radius * SCAL_RATIO * 1.9}px emoji`;
+		ctx.textAlign = 'center';
+		ctx.textBaseline = 'middle';
+		ctx.fillText(role == SHEEP ? '🐏' : '🐺', x, y, radius * SCAL_RATIO * 1.9);
+
+		if(this.userRole == SHEEP) {
+			ctx.translate(cnvW, cnvW);
+			ctx.rotate(Math.PI);
+		}
 	}
 
 	prepareLoc() {
@@ -293,7 +311,7 @@ class WolfSheepGame {
 		
 		// wolf selected
 		if(locations[fromX][fromY]%2==0) {
-			// target is sheep and distance is less than 2
+			// target is sheep and distance is 2
 			if(locations[toX][toY]%2 && this.locDistance(fromX, fromY, toX, toY) == 2) {
 				return true;
 			}

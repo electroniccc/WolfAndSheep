@@ -29,13 +29,13 @@ function onGameOver(winner, steps) {
 	removeClass(btnEl, 'clicked');
 	
 	document.getElementById('dialog-result').style.display = "block";
-	document.getElementById('result-header').innerHTML = `${winner==SHEEP?'Sheep': 'Wolf'} Win!`
+	document.getElementById('result-header').innerHTML = `${winner==SHEEP?i18n('Sheep'): i18n('Wolf')} ${i18n('Win!')}`
 }
 
 function onDlgClicked(evt, game) {
 	if(evt.target.id == 'sheep-btn') {
 		game.setUserRole(SHEEP);
-		document.getElementById('canvas').classList.add('user-isSheep');
+		document.getElementById('canvas').classList.add('user-is-sheep');
 	} else if(evt.target.id == 'wolf-btn') {
 		game.setUserRole(WOLF);
 	} else {
@@ -45,10 +45,17 @@ function onDlgClicked(evt, game) {
 	canStart = false;
 	game.start();
 	const btnEl = document.getElementById('btn-start');
-	// removeClass(btnEl, 'button-63');
+
 	addClass(btnEl, 'clicked');
 
 	document.getElementById("choose-dialog").style.display = "none";
+}
+
+function onResultDlgClicked(evt, game) {
+	if(evt.target.id != 'ok-btn') return;
+
+	void game;
+	document.getElementById('dialog-result').style.display = 'none';
 }
 
 function addEvent(game) {
@@ -60,24 +67,29 @@ function addEvent(game) {
 		onGameReset(game, event);
 	});
 
-	const dlg = document.getElementById('dialog');
+	let dlg = document.getElementById('dialog');
 	dlg.addEventListener('click', (evt) => {
 		onDlgClicked(evt, game);
+	});
+
+	dlg = document.getElementById('dialog-result');
+	dlg.addEventListener('click', (evt) => {
+		onResultDlgClicked(evt, game);
 	});
 }
 
 function adjustCanvasSize(el) {
-	const bodyWidth = document.body.clientWidth;
+	const dpr = window.devicePixelRatio;
+	const cssWidth = el.getBoundingClientRect().width;
 
-	let canvasWidth = bodyWidth >= CANVS_WIDTH ? CANVS_WIDTH : Math.round(bodyWidth * 0.9);
+	el.style.height = cssWidth + 'px';
 
-	const ua = navigator.userAgent;
-	if((ua.indexOf('Android') > -1 || ua.indexOf('ios') > -1) && bodyWidth >= CANVS_WIDTH) {
-		canvasWidth = Math.round(bodyWidth * 0.85);
-	}
+	el.width = cssWidth * dpr;
+	el.height = cssWidth * dpr;
 
-	el.width = canvasWidth;
-	el.height = canvasWidth;
+	const ctx = el.getContext('2d');
+	ctx.scale(dpr,dpr);
+
 }
 
 function main() {
@@ -86,12 +98,23 @@ function main() {
 		return;
 	}
 
+	i18nInit();
+
 	adjustCanvasSize(canvas);
 
 	const game = new WolfSheepGame(canvas, onGameOver);
 	game.init();
 
 	addEvent(game);
+
+	// alert(isSupportFontFamily('serif'))
+
+	let lan = navigator.language.toLowerCase();
+	if(lan.indexOf('zh') > -1) {
+		document.getElementById('rule-zh').style.display = 'block';
+	} else {
+		document.getElementById('rule-en').style.display = 'block';
+	}
 }
 
 main();

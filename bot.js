@@ -73,6 +73,10 @@ class GameBot {
 		return x >= 0 && x < CELL_COUNT && y >= 0 && y < CELL_COUNT && !this.locations[x][y];
 	}
 
+	evaluate() {
+		return 0;
+	}
+
 	tryStep(x1, y1, x2, y2, wolfLoc, depth, stepCount, curSheepCount, hopeSheepWin=true) {
 		let wolfAvalCount = 0;
 
@@ -299,7 +303,7 @@ class GameSheepBot extends GameBot {
 		let x= -Infinity;
 		let retStep = [0, 0, 0, 0];
 		for(let s of possibleSteps) {
-			const r = this.tryStep(s[0][0], s[0][1], s[1][0], s[1][1], this.wolfLoc, 2/2, 0, this.sheepCount, true);
+			const r = this.tryStep(s[0][0], s[0][1], s[1][0], s[1][1], this.wolfLoc, 1, 0, this.sheepCount, true);
 			if(r > x) {
 				x = r;
 				retStep = [s[0][0], s[0][1], s[1][0], s[1][1]];
